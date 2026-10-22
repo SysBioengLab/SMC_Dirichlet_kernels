@@ -76,7 +76,7 @@ Pre-computed results are included, so every analysis and figure script runs with
 
 ---
 
-## Kernel names: code ↔ paper
+## Kernel names
 
 The `kernel` string selects the perturbation strategy; `getKernelSpec(idx)` maps the index used in the drivers and file names onto it.
 
