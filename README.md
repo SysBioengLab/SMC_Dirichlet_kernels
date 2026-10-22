@@ -3,6 +3,7 @@
 MATLAB source code accompanying:
 
 > **Bayesian Parameter Inference on the Simplex: Convenient Transformations and Perturbation Kernels for Sequential Monte Carlo Sampling**
+>
 > Pedro A. Saa, Gabriel I. Miranda-Contreras, Christopher Drovandi, Lars K. Nielsen.
 
 Two families are compared:
