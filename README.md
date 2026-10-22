@@ -1,4 +1,4 @@
-# SMC-ABC Perturbation Kernels on the Simplex — MATLAB Code
+# SMC-ABC Perturbation Kernels on the Simplex
 
 MATLAB source code accompanying:
 
@@ -12,27 +12,10 @@ Two families are compared:
 
 ---
 
-## Table of contents
+## Indications
 
-- [Quick start](#quick-start)
-- [Figure numbering](#figure-numbering)
-- [Directory layout](#directory-layout)
-- [Case studies](#case-studies)
-- [Kernel names: code ↔ paper](#kernel-names-code--paper)
-- [DK tuning methods](#dk-tuning-methods)
-- [Common ASMC settings](#common-asmc-settings)
-- [Shared helper functions](#shared-helper-functions)
-- [Output: `population` structure](#output-population-structure)
-- [Results files and naming convention](#results-files-and-naming-convention)
-- [Requirements](#requirements)
-
----
-
-## Quick start
-
-Each case study lives in its own folder and is driven by a `run_*.m` function taking the **kernel index** as its only argument. `cd` into the folder first — the scripts use relative `addpath`, `load` and `save`.
-
-Figure names below are the file names (`Fig4.png`, …); the printed figure numbers differ, see [Figure numbering](#figure-numbering).
+Each case study is in its own folder and can be executed by the corresponding `run_*.m` function taking the **kernel index** as its only argument.
+Below, the indications for reproducing each figure of the article are provided.
 
 ```matlab
 % Dirichlet kernel tuning study (Fig3.png)
@@ -60,89 +43,6 @@ classifier_performance                    % Table 1 and Supplementary Table S6
 ```
 
 Pre-computed results are included, so every analysis and figure script runs without re-running the (expensive) samplers. The drivers create `results/` if it is missing.
-
-Two further scripts are diagnostics whose output is not an item of the paper: `make_network_figure` (in `COVID-19 model/`) draws the DAG of the Bayes net, and `getPosteriorStructure('covid' | 'hmm' | 'all')`, run from the *root* of `scripts/`, writes the posterior dependence structure to `analysis/`.
-
----
-
-## Figure numbering
-
-Every script, comment and output file in `scripts/` refers to a figure by its **file name** in `submission/figures_final/`. Because the Dirichlet-kernel illustration (`Fig2.png`) is placed in the Methods section, the printed numbers are shifted:
-
-| File | Printed in the paper | Content | Produced by |
-|---|---|---|---|
-| `Fig1.pdf` | Fig. 1 | perturbation strategies (schematic) | not produced here |
-| `Fig3.png` | **Fig. 2** | DK tuning strategies | `DK_tuning/` |
-| `Fig4.png` | **Fig. 3** | multinomial benchmark, known posterior | `multinomial_posterior/` |
-| `Fig5.png` | **Fig. 4** | pair-HMM global alignment | `hmm_global_alignment/` |
-| `Fig6.png` | **Fig. 5** | COVID-19 screening Bayes net | `COVID-19 model/` |
-| `Fig2.png` | **Fig. 6** | Dirichlet kernel concentration (Methods) | not produced here |
-
-So "Fig. 4" in a comment means `Fig4.png`, printed as Fig. 3.
-
----
-
-## Directory layout
-
-```
-scripts/
-├── getPosteriorStructure.m     # diagnostic: Sigma in ILR coordinates, D_cross, variation matrices
-├── analysis/                   # its output (tables + figures), written on demand
-│
-├── DK_tuning/                  # Fig3.png — multinomial models, DK tuning comparison
-│   ├── run_example_scripts.m       <- DRIVER
-│   ├── multinomial_example.m       <- ASMC sampler for the multinomial model
-│   ├── getKernelParam.m            <- the 3 DK tuning methods
-│   ├── ABC_solution_comparison.m   <- ABC vs. analytical posterior (panel C)
-│   ├── make_figures_dk.m           <- metrics table + panels A-B
-│   ├── make_figure_S1.m            <- exact ABC posterior at eps_T = 0 (Supp. Fig. S1)
-│   ├── whistogram.m                <- weighted histogram
-│   ├── data/                       settings1-4.mat (3-, 4-, 5-, 6-component models)
-│   └── results/                    tunning_results_1-4.mat, metrics_dk.*, figures
-│
-├── multinomial_posterior/      # Fig4.png — 6-component multinomial, known posterior
-│   ├── run_multinomial.m           <- DRIVER (serial: a proposal costs microseconds,
-│   │                                  so parfor dispatch would dominate the cost)
-│   ├── multinomial_example.m       <- ASMC sampler, all 5 kernels
-│   ├── simulateMultinomialSummary.m
-│   ├── make_figures_multinomial.m  <- metrics table + assembled figure
-│   ├── figStyle.m                  <- shared palette / fonts (copy, see note below)
-│   └── results/                    results_multinomial{1,3,4,6,7}.mat, metrics, figure
-│
-├── hmm_global_alignment/       # Fig5.png — pair-HMM global sequence alignment
-│   ├── run_global_aligment_hmm.m       <- DRIVER
-│   ├── global_aligment_hmm_example.m   <- ASMC sampler, all 5 kernels
-│   ├── simulateHmmAlignments.m         <- ancestral sampler over M alignments
-│   ├── getHmmSummary.m                 <- the q = 17 summary statistics
-│   ├── simulateHmmSummary.m
-│   ├── setupHmmPool.m                  <- parallel pool for the proposal loop
-│   ├── test_hmm_predictions.m          <- posterior predictive check (diagnostic only;
-│   │                                      no figure of the paper depends on it)
-│   ├── make_figures_hmm.m              <- metrics table + assembled figure
-│   ├── figStyle.m                      <- shared palette / fonts (copy, see note below)
-│   └── results/                        results_hmm_full{1,3,4,6,7}.mat, metrics, figure
-│
-└── COVID-19 model/             # Fig6.png + Table 1 — COVID-19 screening Bayes net
-    ├── run_bayes_net.m             <- DRIVER
-    ├── bayes_net_example.m         <- ASMC sampler, all 5 kernels
-    ├── build_net.m                 <- defines the 15-node DAG -> Bayes_net.mat
-    ├── getCovidSummary.m           <- the q = 31 summary statistics
-    ├── simulateCovidSummary.m      <- cohort simulator (reads theta directly)
-    ├── getCovidOffsets.m           <- flat-vector offsets of each node's CPD
-    ├── predictCovidProb.m          <- closed-form P(COV = + | symptoms, odours)
-    ├── classifier_performance.m    <- Table 1 and Supp. Table S6: metrics + 95% credible intervals
-    ├── youdenThreshold.m           <- operating threshold shared with make_figures_covid
-    ├── make_network_figure.m       <- drawing of the DAG (diagnostic)
-    ├── initializePriors_final_sim.m
-    ├── setupCovidPool.m
-    ├── make_figures_covid.m        <- metrics table + assembled figure
-    ├── figStyle.m                  <- shared palette / fonts (copy, see note below)
-    ├── xdata.mat, dataset.xlsx     KOR-test screening data
-    ├── Bayes_net.mat               DAG structure written by build_net.m
-    ├── results/                    results_bayes_net{1,3,4,6,7}.mat, metrics, figures
-    └── bnt-master/                 vendored Bayes Net Toolbox; used only to build the
-                                    DAG and to cross-check the closed-form predictions
-```
 
 ---
 
@@ -172,8 +72,6 @@ scripts/
 | Supplementary Table S1 | — | not reproduced here: only the adopted scaling, `γ = 1/D`, is implemented (`getKernelParam.m`, method 2) |
 | Supplementary Fig. S1 | `FigS1_exact.png` | `DK_tuning/make_figure_S1.m` |
 
-The assembled figures leave room for the model schematics, which are added to the final artwork by hand: panel A is blank in `Fig5.png` and `Fig6.png` as written by the scripts. `make_figures_multinomial.m` likewise writes a blank panel A followed by panels B–E, whereas the published `Fig4.png` has no schematic and carries those four panels as A–D; the relettering was done on the artwork.
-
 `multinomial_posterior` is the **convergence benchmark**: the counts are sufficient, so at `tolFinal = 0` the ABC posterior is the *exact* posterior `Dir(prior + y)`. Each kernel is scored against it component by component — posterior mean, median, interquartile range and central 95% interval, all computed from the weighted particles and compared with the analytic marginals `Beta(alpha_i, alpha_0 - alpha_i)`.
 
 ---
@@ -191,8 +89,6 @@ The `kernel` string selects the perturbation strategy; `getKernelSpec(idx)` maps
 | 7 | `'gamma_MGK'` | **LGT-MGK** | Log-Gamma Transformation: `z_j = ln(v_j)` on the underlying Gamma variates. Unbounded, no dimension reduction (`D` free variables). |
 
 These are exactly the five strategies reported in the paper. **Indices 2 and 5 are unused**.
-
-Each transformation is set up in a dedicated `if strcmp(kernel, ...)` block at the top of the sampler, where the forward map, inverse map, transformed log-prior `log_pz` and Jacobian determinant `detJ` are defined as anonymous functions.
 
 ---
 
@@ -222,7 +118,7 @@ The `method` argument selects how the DK concentration `κ_t` is adapted at each
 
 `alpha` is a **percentage** in the code (`50`) but a fraction (`0.5`) in the paper.
 
-The tolerance schedule is `ε_t = max{ min{ ρ^(N_α), ε_{t-1} − δ_t }, ε_T }`. The percentile `ρ^(N_α)` normally drives it; the `ε_{t-1} − δ_t` term binds only when the percentile fails to move, which keeps the sequence strictly decreasing and guarantees termination. The decrement is multiplicative for the HMM and COVID models and additive (`δ_t = 2`) for the multinomial ones, where `ρ` is an `l1` norm between count vectors of equal total and is therefore always even.
+The tolerance schedule is `ε_t = max{ min{ ρ^(N_α), ε_{t-1} − δ_t }, ε_T }`. The percentile `ρ^(N_α)` normally drives it; the `ε_{t-1} − δ_t` term binds only when the percentile fails to move, which keeps the sequence strictly decreasing and guarantees termination.
 
 There is **no cap on the number of proposals**. A run stops when it reaches `tolFinal`, or when an iteration is below `pmin_acc` after 1e6 proposals. In the latter case the partial batch is discarded, the previous complete population is restored, and the result is returned with `converged = false`.
 
@@ -232,7 +128,7 @@ Every driver calls `rng('default')` before sampling. The HMM and COVID samplers 
 
 ## Shared helper functions
 
-Each case-study folder is **self-contained**: it holds its own copy of every helper it needs, so you can `cd` into one and run it without touching the others. `compute_kld.m`, `getPopulationMetrics.m`, `logsumexp.m` and `probDirichlet.m` are duplicated in all four folders, `figStyle.m`, `getDKparam.m` and `mappingFxn_beta.m` in the three benchmark folders. Those copies are identical — if you change one, change the others. `getKernelSpec.m` and `getGeneralKernelParam.m` also exist in the three benchmark folders but differ on purpose: the former in the result-file names, the latter in how the Dirichlet blocks are located (from `priors` in the multinomial and HMM folders, from the block `indexes` in the Bayes net).
+Each case-study folder is **self-contained**: it holds its own copy of every helper it needs, so you can `cd` into one and run it without touching the others.
 
 | Function | Purpose |
 |---|---|
@@ -259,9 +155,8 @@ Bayes-net-specific helpers:
 | `predictCovidProb(...)` | Closed-form `P(COV = + | symptoms, odours)`, marginalising the hidden olfactory node. |
 | `youdenThreshold(p, y)` | Threshold maximising Youden's J; shared by `classifier_performance` and `make_figures_covid` so Table 1 and the ROC panel mark the same operating point. |
 
-BNT is used **only** by `build_net.m` and by the verification step inside `classifier_performance.m`. `simulateCovidSummary.m` simulates and summarises a cohort in one pass, and `predictCovidProb.m` does inference in closed form.
+BNT is used only by `build_net.m` and by the verification step inside `classifier_performance.m`. `simulateCovidSummary.m` simulates and summarises a cohort in one pass, and `predictCovidProb.m` does inference in closed form.
 
-`build_net.m` is a one-off setup script: it writes `Bayes_net.mat`, which `classifier_performance.m` loads for the cross-check. Nothing *calls* it, but deleting it would make that check unreproducible.
 
 ---
 
@@ -295,13 +190,9 @@ The main performance metric is **`time / ESS(end)`**.
 
 ## Results files and naming convention
 
-The variable *inside* each file is named after its kernel (`population_cwDK`, `population_MGK`, `population_ilrtMGK`, `population_beta_logitMGK`, `population_gammaMGK`); `getKernelSpec` returns that name in its `varName` field, so scripts never hard-code it.
+The variable *inside* each file is named after its kernel (`population_cwDK`, `population_MGK`, `population_ilrtMGK`, `population_beta_logitMGK`, `population_gammaMGK`); `getKernelSpec` returns that name in its `varName` field.
 
 Alongside them, each `make_figures_*` writes `metrics_<model>.{mat,csv}` and the assembled figure as `.fig` and `.png`.
-
-`Fig3.png`–`Fig6.png` are additionally written as **`.svg`** for typesetting — `fig3A_performance`, `fig3B_concentration` and `fig3C_marginals` in `DK_tuning/results/`, `Fig4` in `multinomial_posterior/results/`, `Fig5` in `hmm_global_alignment/results/` and `Fig6` in `COVID-19 model/results/`. The SVGs are true vector output (`-dsvg -painters`): labels set with the TeX interpreter are converted to glyph outlines, so they render identically without depending on installed fonts. Supplementary Fig. S1 is written as `.png` only (`DK_tuning/results/FigS1_exact_posterior.png`, renamed `FigS1_exact.png` in `figures_final/`).
-
-The assembled figures are copied by hand into `submission/figures_final/`, which is what the LaTeX sources include; nothing in `scripts/` writes there.
 
 For `DK_tuning/results/tunning_results_{1,2,3,4}.mat` (3-, 4-, 5- and 6-component models), variables are `population<method><dataset>` — e.g. `population13` is tuning method 1 on dataset 3.
 
@@ -314,7 +205,7 @@ For `DK_tuning/results/tunning_results_{1,2,3,4}.mat` (3-, 4-, 5- and 6-componen
 - **Optimization Toolbox** — `fmincon`, for DK tuning method 1.
 - **Parallel Computing Toolbox** — `parfor` and `parpool`, for the HMM and COVID samplers. Optional: with no pool open, `parfor` runs serially and only the wall time changes.
 - **Bioinformatics Toolbox** — `hmmdecode`, for `test_hmm_predictions.m` only. The pair-HMM *sampler* has its own ancestral sampler in `simulateHmmAlignments.m`.
-- **[Bayes Net Toolbox (BNT)](https://github.com/bayesnet/bnt)** — for `build_net.m` and for the verification step in `classifier_performance.m`. A copy is vendored at `COVID-19 model/bnt-master/` and added to the path by those scripts.
+- **[Bayes Net Toolbox (BNT)](https://github.com/bayesnet/bnt)** — for `build_net.m` and for the verification step in `classifier_performance.m`. A copy is included at `COVID-19 model/bnt-master/` and added to the path by those scripts.
 
 Reported benchmarks were run on an Intel Core Ultra 7 258V (8 physical cores, 32 GB RAM) with a pool of 8 workers.
 
